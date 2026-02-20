@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -45,11 +45,7 @@ export default function SendPage() {
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
-
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       const res = await fetch('/api/user/accounts');
       const data = await res.json();
@@ -63,7 +59,11 @@ export default function SendPage() {
     } catch (error) {
       showToast('Failed to load accounts', 'error');
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
 
   const handlePreview = async () => {
     if (!selectedAccountId || !recipient || !amount) {

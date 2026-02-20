@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
@@ -30,11 +30,7 @@ export default function AccountsPage() {
   const [newNickname, setNewNickname] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
-
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       const res = await fetch('/api/user/accounts');
       const data = await res.json();
@@ -46,7 +42,11 @@ export default function AccountsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
 
   const handleSetPrimary = async (accountId: string) => {
     try {
