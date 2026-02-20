@@ -27,10 +27,7 @@ const nextConfig = {
   images: {
     domains: [],
   },
-  // Output configuration for Render
-  output: 'standalone',
-  // WebSocket configuration
-  // Note: Custom server (server.js) handles WebSocket connections
+  // Custom server (server.js) with WebSocket/cron; do not use output: 'standalone'
   // For Render, ensure WebSocket is enabled in service settings
 };
 
