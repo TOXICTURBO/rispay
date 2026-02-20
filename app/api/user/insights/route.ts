@@ -42,7 +42,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
   let totalSent = 0;
   let totalReceived = 0;
   let largestAmount = 0;
-  let largestTransaction = null;
+  let largestTransaction: (typeof monthlyTransactions)[number] | null = null;
 
   monthlyTransactions.forEach((tx) => {
     const amount = Number(tx.amount);
