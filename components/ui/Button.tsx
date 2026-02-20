@@ -3,11 +3,15 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+// Omit animation handlers that conflict with framer-motion's motion.button
+type ButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'onAnimationStart' | 'onAnimationEnd' | 'onAnimationIteration'
+> & {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
-}
+};
 
 const variantClasses = {
   primary:
