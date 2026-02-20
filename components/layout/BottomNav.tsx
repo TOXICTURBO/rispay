@@ -24,7 +24,7 @@ export function BottomNav() {
           const Icon = item.icon;
 
           return (
-            <Link key={item.href} href={item.href} className="flex-1">
+            <Link key={item.href} href={item.href} className="flex-1 relative">
               <motion.div
                 whileTap={{ scale: 0.9 }}
                 className={`
@@ -40,12 +40,7 @@ export function BottomNav() {
                 <Icon className="w-6 h-6 mb-1" />
                 <span className="text-xs font-medium">{item.label}</span>
                 {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute bottom-0 w-12 h-1 bg-primary-600 dark:bg-primary-400 rounded-t-full"
-                    initial={false}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-primary-600 dark:bg-primary-400 rounded-t-full" />
                 )}
               </motion.div>
             </Link>

@@ -33,9 +33,16 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
   const body = await req.json();
   const data = systemSettingsSchema.parse(body);
 
+  const updateData: Record<string, unknown> = {};
+  if (data.maxBankFeeCap !== undefined) updateData.max_bank_fee_cap = data.maxBankFeeCap;
+  if (data.globalTaxPercentage !== undefined) updateData.global_tax_percentage = data.globalTaxPercentage;
+  if (data.inflationRate !== undefined) updateData.inflation_rate = data.inflationRate;
+  if (data.taxEnabled !== undefined) updateData.tax_enabled = data.taxEnabled;
+  if (data.inflationEnabled !== undefined) updateData.inflation_enabled = data.inflationEnabled;
+
   const settings = await prisma.systemSettings.upsert({
     where: { id: 'default' },
-    update: data,
+    update: updateData,
     create: {
       id: 'default',
       max_bank_fee_cap: data.maxBankFeeCap ?? 5.0,
