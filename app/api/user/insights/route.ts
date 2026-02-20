@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@prisma/client';
+import { UserRole, type Transaction } from '@prisma/client';
 
 export const GET = withAuth(async (req: NextRequest, user) => {
   // Get user's account IDs
@@ -42,7 +42,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
   let totalSent = 0;
   let totalReceived = 0;
   let largestAmount = 0;
-  let largestTransaction: (typeof monthlyTransactions)[number] | null = null;
+  let largestTransaction: Transaction | null = null;
 
   monthlyTransactions.forEach((tx) => {
     const amount = Number(tx.amount);
