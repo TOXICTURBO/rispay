@@ -101,16 +101,19 @@ export const GET = withAuth(async (req: NextRequest, user) => {
 
   const dailyAverage = totalSent / 30;
 
-  return NextResponse.json({
-    totalSent,
-    totalReceived,
-    largestTransaction: largestTransaction
-      ? {
+  const largestTransactionPayload: { id: string; amount: number; date: Date } | null =
+    largestTransaction === null
+      ? null
+      : {
           id: largestTransaction.id,
           amount: Number(largestTransaction.amount),
           date: largestTransaction.created_at,
-        }
-      : null,
+        };
+
+  return NextResponse.json({
+    totalSent,
+    totalReceived,
+    largestTransaction: largestTransactionPayload,
     dailyAverage,
     transactions30Days: Object.entries(dailyData).map(([date, data]) => ({
       date,
