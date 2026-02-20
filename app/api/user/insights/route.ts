@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware';
 import { prisma } from '@/lib/db';
-import { UserRole, type Transaction } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
 export const GET = withAuth(async (req: NextRequest, user) => {
   // Get user's account IDs
@@ -38,13 +38,12 @@ export const GET = withAuth(async (req: NextRequest, user) => {
     },
   });
 
-  // Calculate totals
+  // Calculate totals and largest transaction payload in one pass
   let totalSent = 0;
   let totalReceived = 0;
-  let largestAmount = 0;
-  let largestTransaction: Transaction | null = null;
+  let largestTransactionPayload: { id: string; amount: number; date: Date } | null = null;
 
-  monthlyTransactions.forEach((tx) => {
+  for (const tx of monthlyTransactions) {
     const amount = Number(tx.amount);
     const isSent = accountIds.includes(tx.sender_account_id);
     const isReceived = accountIds.includes(tx.receiver_account_id);
@@ -55,11 +54,14 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       totalReceived += amount;
     }
 
-    if (amount > largestAmount) {
-      largestAmount = amount;
-      largestTransaction = tx;
+    if (!largestTransactionPayload || amount > largestTransactionPayload.amount) {
+      largestTransactionPayload = {
+        id: tx.id,
+        amount,
+        date: tx.created_at,
+      };
     }
-  });
+  }
 
   // Get 30-day transaction data for chart
   const transactions30Days = await prisma.transaction.findMany({
@@ -100,15 +102,6 @@ export const GET = withAuth(async (req: NextRequest, user) => {
   });
 
   const dailyAverage = totalSent / 30;
-
-  const largestTransactionPayload: { id: string; amount: number; date: Date } | null =
-    largestTransaction === null
-      ? null
-      : {
-          id: largestTransaction.id,
-          amount: Number(largestTransaction.amount),
-          date: largestTransaction.created_at,
-        };
 
   return NextResponse.json({
     totalSent,
