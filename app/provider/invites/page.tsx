@@ -19,8 +19,11 @@ export default function ProviderInvitesPage() {
     fetch('/api/provider/banks')
       .then((res) => res.json())
       .then((data) => {
-        setBanks(data.banks || []);
-        if (data.banks?.length && !selectedBankId) setSelectedBankId(data.banks[0].id);
+        const list = data.banks || [];
+        setBanks(list);
+        if (list.length > 0) {
+          setSelectedBankId((prev) => prev || list[0].id);
+        }
       });
   }, []);
 

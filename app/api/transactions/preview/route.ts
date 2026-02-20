@@ -57,6 +57,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
           },
           include: {
             bank: true,
+            user: true,
           },
         },
       },
