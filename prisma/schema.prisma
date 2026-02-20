@@ -1,0 +1,233 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Optional: for migrations on NeonDB
+}
+
+enum UserRole {
+  ADMIN
+  PROVIDER
+  USER
+}
+
+enum KeyType {
+  USER
+  PROVIDER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum AuditActionType {
+  KEY_GENERATED
+  BANK_CREATED
+  FEE_CHANGED
+  VAULT_TRANSFER
+  INFLATION_RUN
+  INTEREST_PAYOUT
+  ECONOMY_RESET
+  TAX_TOGGLED
+  INFLATION_TOGGLED
+  SETTINGS_UPDATED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  username      String         @unique
+  password_hash String
+  role          UserRole
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  created_registration_keys RegistrationKey[] @relation("CreatedBy")
+  used_registration_key     RegistrationKey? @relation("UsedBy")
+  created_bank_invites      BankInviteCode[] @relation("CreatedBy")
+  used_bank_invite          BankInviteCode?  @relation("UsedBy")
+  banks                     Bank[]           @relation("Provider")
+  user_bank_links           UserBankLink[]
+  accounts                  Account[]
+  account_requests          AccountRequest[]
+  sent_transactions         Transaction[]    @relation("Sender")
+  received_transactions     Transaction[]    @relation("Receiver")
+  user_settings             UserSettings?
+  audit_logs                AuditLog[]
+  processed_account_requests AccountRequest[] @relation("ProcessedBy")
+
+  @@map("users")
+}
+
+model RegistrationKey {
+  id         String    @id @default(uuid())
+  key_hash   String    @unique
+  key_type   KeyType
+  used       Boolean   @default(false)
+  used_by_id String?
+  used_at    DateTime?
+  created_by_id String
+  created_at DateTime  @default(now())
+
+  created_by User @relation("CreatedBy", fields: [created_by_id], references: [id])
+  used_by    User? @relation("UsedBy", fields: [used_by_id], references: [id])
+
+  @@map("registration_keys")
+}
+
+model Bank {
+  id                  String            @id @default(uuid())
+  name                String
+  code                String            @unique
+  provider_id         String
+  vault_balance       Decimal           @default(0) @db.Decimal(15, 2)
+  base_fee_percentage Decimal           @db.Decimal(5, 4)
+  interest_rate       Decimal?          @db.Decimal(5, 4)
+  maintenance_mode    Boolean           @default(false)
+  created_at          DateTime          @default(now())
+
+  provider        User              @relation("Provider", fields: [provider_id], references: [id])
+  invite_codes    BankInviteCode[]
+  user_bank_links UserBankLink[]
+  accounts        Account[]
+  account_requests AccountRequest[]
+
+  @@map("banks")
+}
+
+model BankInviteCode {
+  id         String    @id @default(uuid())
+  code_hash  String    @unique
+  bank_id    String
+  used       Boolean   @default(false)
+  used_by_id String?
+  used_at    DateTime?
+  created_by_id String
+  created_at DateTime  @default(now())
+
+  bank       Bank      @relation(fields: [bank_id], references: [id])
+  created_by User      @relation("CreatedBy", fields: [created_by_id], references: [id])
+  used_by    User?     @relation("UsedBy", fields: [used_by_id], references: [id])
+
+  @@map("bank_invite_codes")
+}
+
+model UserBankLink {
+  id       String   @id @default(uuid())
+  user_id  String
+  bank_id  String
+  linked_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+  bank Bank @relation(fields: [bank_id], references: [id])
+
+  @@unique([user_id, bank_id])
+  @@map("user_bank_links")
+}
+
+model Account {
+  id                 String    @id @default(uuid())
+  user_id            String
+  bank_id            String
+  balance            Decimal   @default(0) @db.Decimal(15, 2)
+  is_primary         Boolean   @default(false)
+  nickname           String?
+  activation_key_hash String?
+  activated_at       DateTime?
+  created_at         DateTime  @default(now())
+
+  user            User         @relation(fields: [user_id], references: [id])
+  bank            Bank         @relation(fields: [bank_id], references: [id])
+  sent_transactions   Transaction[] @relation("SenderAccount")
+  received_transactions Transaction[] @relation("ReceiverAccount")
+
+  @@map("accounts")
+}
+
+model AccountRequest {
+  id                String    @id @default(uuid())
+  request_code_hash String    @unique
+  user_id           String
+  bank_id           String
+  used              Boolean   @default(false)
+  processed_by_id   String?
+  created_at        DateTime  @default(now())
+
+  user          User    @relation(fields: [user_id], references: [id])
+  bank          Bank    @relation(fields: [bank_id], references: [id])
+  processed_by  User?   @relation("ProcessedBy", fields: [processed_by_id], references: [id])
+
+  @@map("account_requests")
+}
+
+model Transaction {
+  id                 String            @id @default(uuid())
+  sender_account_id  String
+  receiver_account_id String
+  amount             Decimal           @db.Decimal(15, 2)
+  bank_fee           Decimal           @db.Decimal(15, 2)
+  system_tax         Decimal           @db.Decimal(15, 2)
+  memo               String?
+  status             TransactionStatus @default(COMPLETED)
+  created_at         DateTime          @default(now())
+
+  sender_account   Account @relation("SenderAccount", fields: [sender_account_id], references: [id])
+  receiver_account Account @relation("ReceiverAccount", fields: [receiver_account_id], references: [id])
+
+  @@map("transactions")
+}
+
+model UserSettings {
+  user_id                String  @id
+  transaction_pin_hash   String?
+  dark_mode              Boolean @default(false)
+  notifications_enabled  Boolean @default(true)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model SystemSettings {
+  id                    String   @id @default(uuid())
+  max_bank_fee_cap      Decimal  @default(5.0) @db.Decimal(5, 4)
+  global_tax_percentage Decimal  @default(1.0) @db.Decimal(5, 4)
+  inflation_rate        Decimal  @default(0.0) @db.Decimal(5, 4)
+  tax_enabled           Boolean  @default(true)
+  inflation_enabled     Boolean  @default(false)
+  admin_wallet_balance  Decimal  @default(0) @db.Decimal(15, 2)
+  vault_transfer_fee    Decimal  @default(0.5) @db.Decimal(5, 4)
+  updated_at            DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id         String          @id @default(uuid())
+  admin_id   String
+  action_type AuditActionType
+  details    Json
+  created_at DateTime        @default(now())
+
+  admin User @relation(fields: [admin_id], references: [id])
+
+  @@map("audit_logs")
+}
+
+model InflationLog {
+  id            String   @id @default(uuid())
+  previous_rate Decimal  @db.Decimal(5, 4)
+  new_rate      Decimal  @db.Decimal(5, 4)
+  vault_changes Json
+  created_at    DateTime @default(now())
+
+  @@map("inflation_logs")
+}

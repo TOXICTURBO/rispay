@@ -1,0 +1,13 @@
+# Render ignore file (similar to .gitignore)
+# Files that don't need to be uploaded to Render
+
+node_modules/
+.next/
+.env
+.env.local
+.env*.local
+*.log
+.DS_Store
+coverage/
+.vercel/
+prisma/migrations/
