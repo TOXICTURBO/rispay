@@ -3,10 +3,14 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 
-// Omit animation handlers that conflict with framer-motion's motion.button
+// Omit handlers that conflict with framer-motion's motion.button
+const MOTION_CONFLICT_PROPS = [
+  'onAnimationStart', 'onAnimationEnd', 'onAnimationIteration',
+  'onDragStart', 'onDrag', 'onDragEnd',
+] as const;
 type ButtonProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  'onAnimationStart' | 'onAnimationEnd' | 'onAnimationIteration'
+  typeof MOTION_CONFLICT_PROPS[number]
 > & {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';

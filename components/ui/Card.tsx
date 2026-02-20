@@ -3,10 +3,18 @@
 import { HTMLAttributes, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
+// Omit handlers that conflict with framer-motion's motion.div
+const MOTION_CONFLICT_PROPS = [
+  'onAnimationStart', 'onAnimationEnd', 'onAnimationIteration',
+  'onDragStart', 'onDrag', 'onDragEnd',
+] as const;
+type CardProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  typeof MOTION_CONFLICT_PROPS[number]
+> & {
   hover?: boolean;
   padding?: 'sm' | 'md' | 'lg';
-}
+};
 
 const paddingClasses = {
   sm: 'p-3',

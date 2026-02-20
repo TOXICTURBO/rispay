@@ -32,6 +32,11 @@ export const GET = withAuth(async (req: NextRequest, user) => {
               code: true,
             },
           },
+          user: {
+            select: {
+              username: true,
+            },
+          },
         },
       },
       receiver_account: {
