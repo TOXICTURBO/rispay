@@ -53,13 +53,11 @@ model User {
   created_registration_keys RegistrationKey[] @relation("CreatedBy")
   used_registration_key     RegistrationKey? @relation("UsedBy")
   created_bank_invites      BankInviteCode[] @relation("CreatedBy")
-  used_bank_invite          BankInviteCode?  @relation("UsedBy")
+  used_bank_invites         BankInviteCode[] @relation("UsedBy")
   banks                     Bank[]           @relation("Provider")
   user_bank_links           UserBankLink[]
   accounts                  Account[]
   account_requests          AccountRequest[]
-  sent_transactions         Transaction[]    @relation("Sender")
-  received_transactions     Transaction[]    @relation("Receiver")
   user_settings             UserSettings?
   audit_logs                AuditLog[]
   processed_account_requests AccountRequest[] @relation("ProcessedBy")
@@ -72,7 +70,7 @@ model RegistrationKey {
   key_hash   String    @unique
   key_type   KeyType
   used       Boolean   @default(false)
-  used_by_id String?
+  used_by_id String?   @unique
   used_at    DateTime?
   created_by_id String
   created_at DateTime  @default(now())
@@ -108,7 +106,7 @@ model BankInviteCode {
   code_hash  String    @unique
   bank_id    String
   used       Boolean   @default(false)
-  used_by_id String?
+  used_by_id String?   @unique
   used_at    DateTime?
   created_by_id String
   created_at DateTime  @default(now())
