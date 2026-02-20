@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'Rispay - Multi-Bank Financial Simulation',
   description: 'A closed multi-bank financial ecosystem simulation platform',
   manifest: '/manifest.json',
+  icons: { icon: '/icon' },
   themeColor: '#1F4ED8',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };

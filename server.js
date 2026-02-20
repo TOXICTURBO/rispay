@@ -23,21 +23,14 @@ app.prepare().then(() => {
     // Log so you can see in Render logs that requests reached the server
     console.log(req.method, pathname);
 
-    handle(req, res, parsedUrl).then(
-      () => {
-        if (!res.writableEnded) {
-          console.error('handle() resolved but response not ended for', req.method, pathname);
-        }
-      },
-      (err) => {
+    handle(req, res, parsedUrl).catch((err) => {
         console.error('Error handling', req.method, pathname, err);
         if (!res.headersSent) {
           res.statusCode = 500;
           res.setHeader('Content-Type', 'text/plain');
           res.end('Internal Server Error');
         }
-      }
-    );
+    });
   });
 
   // Initialize WebSocket (only if socket.io is available)
