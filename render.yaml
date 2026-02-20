@@ -16,8 +16,7 @@ services:
         generateValue: true
       - key: ADMIN_PASSWORD
         sync: false
-      - key: PORT
-        value: 3000
+    # Do not set PORT - Render injects it (e.g. 10000); app must listen on process.env.PORT
     healthCheckPath: /api/health
     autoDeploy: true
     # Enable WebSocket support
