@@ -16,7 +16,7 @@ export const sendMoneySchema = z.object({
   amount: z.number().positive().max(1000000),
   senderAccountId: z.string(),
   memo: z.string().max(200).optional(),
-  pin: z.string().length(4),
+  pin: z.string().length(4).regex(/^\d+$/, 'PIN must be exactly 4 digits'),
 });
 
 export const createBankSchema = z.object({
@@ -82,7 +82,6 @@ export const generateInviteCodeSchema = z.object({
 
 export const processAccountRequestSchema = z.object({
   requestCode: z.string(),
-  accountId: z.string(),
 });
 
 export const generateActivationKeySchema = z.object({

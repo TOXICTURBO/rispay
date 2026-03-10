@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware';
 import { prisma } from '@/lib/db';
-import { processAccountRequestSchema } from '@/lib/validation';
+import { z } from 'zod';
 import { generateActivationKey, hashKey, generateSecureId } from '@/lib/hash';
 import { UserRole } from '@prisma/client';
+
+const processAccountRequestSchema = z.object({
+  requestCode: z.string(),
+});
 
 export const GET = withAuth(async (req: NextRequest, user) => {
   // Get all banks owned by this provider
@@ -46,7 +50,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
 
 export const POST = withAuth(async (req: NextRequest, user) => {
   const body = await req.json();
-  const { requestCode, accountId } = processAccountRequestSchema.parse(body);
+  const { requestCode } = processAccountRequestSchema.parse(body);
 
   const requestCodeHash = hashKey(requestCode);
 
@@ -73,31 +77,21 @@ export const POST = withAuth(async (req: NextRequest, user) => {
     );
   }
 
-  // Verify account exists and belongs to the user and bank
-  const account = await prisma.account.findUnique({
-    where: { id: accountId },
-  });
-
-  if (
-    !account ||
-    account.user_id !== accountRequest.user_id ||
-    account.bank_id !== accountRequest.bank_id
-  ) {
-    return NextResponse.json(
-      { error: 'Invalid account' },
-      { status: 400 }
-    );
-  }
-
   // Generate activation key
   const activationKey = generateActivationKey();
   const activationKeyHash = hashKey(activationKey);
+  const newAccountId = generateSecureId(24);
 
-  await prisma.$transaction(async (tx) => {
-    // Update account with activation key
-    await tx.account.update({
-      where: { id: accountId },
+  // Create account and set activation key (atomic transaction)
+  const result = await prisma.$transaction(async (tx) => {
+    // Create new account with activation key
+    const newAccount = await tx.account.create({
       data: {
+        id: newAccountId,
+        user_id: accountRequest.user_id,
+        bank_id: accountRequest.bank_id,
+        balance: 0,
+        is_primary: false,
         activation_key_hash: activationKeyHash,
       },
     });
@@ -110,10 +104,13 @@ export const POST = withAuth(async (req: NextRequest, user) => {
         processed_by_id: user.id,
       },
     });
+
+    return newAccount;
   });
 
   return NextResponse.json({
     success: true,
+    accountId: result.id,
     activationKey,
   });
 }, [UserRole.PROVIDER]);
