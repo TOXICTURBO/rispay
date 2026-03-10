@@ -9,7 +9,7 @@ import { UserRole } from '@prisma/client';
 
 export const POST = withAuth(async (req: NextRequest, user) => {
   const body = await req.json();
-  const { recipient, amount, senderAccountId, memo, pin } = sendMoneySchema.parse(body);
+  const { recipient, amount, senderAccountId, memo, tag, pin } = sendMoneySchema.parse(body);
 
   // Rate limiting for transfers
   if (!rateLimit(`transfer:${user.id}`, 10, 60 * 1000)) {
@@ -184,6 +184,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
         bank_fee: bankFee,
         system_tax: tax,
         memo: memo || null,
+        tag: tag || null,
         status: 'COMPLETED',
       },
     });

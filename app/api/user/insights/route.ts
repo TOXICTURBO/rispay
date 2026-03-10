@@ -42,6 +42,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
   let totalSent = 0;
   let totalReceived = 0;
   let largestTransactionPayload: { id: string; amount: number; date: Date } | null = null;
+  const tagSpending: Record<string, number> = {};
 
   for (const tx of monthlyTransactions) {
     const amount = Number(tx.amount);
@@ -50,6 +51,10 @@ export const GET = withAuth(async (req: NextRequest, user) => {
 
     if (isSent && !isReceived) {
       totalSent += amount;
+      // Track tag spending for sent transactions
+      if (tx.tag) {
+        tagSpending[tx.tag] = (tagSpending[tx.tag] || 0) + amount;
+      }
     } else if (isReceived && !isSent) {
       totalReceived += amount;
     }
@@ -113,5 +118,11 @@ export const GET = withAuth(async (req: NextRequest, user) => {
       sent: data.sent,
       received: data.received,
     })),
+    tagSpending: Object.entries(tagSpending)
+      .map(([tag, amount]) => ({
+        tag,
+        amount,
+      }))
+      .sort((a, b) => b.amount - a.amount),
   });
 }, [UserRole.USER]);

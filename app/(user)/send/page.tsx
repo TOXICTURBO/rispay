@@ -40,6 +40,7 @@ export default function SendPage() {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');
+  const [tag, setTag] = useState('');
   const [pin, setPin] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -116,6 +117,7 @@ export default function SendPage() {
           recipient,
           amount: parseFloat(amount),
           memo: memo || undefined,
+          tag: tag || undefined,
           pin,
         }),
       });
@@ -126,6 +128,7 @@ export default function SendPage() {
         setRecipient('');
         setAmount('');
         setMemo('');
+        setTag('');
         setPin('');
         setPreview(null);
         setPinModalOpen(false);
@@ -138,6 +141,11 @@ export default function SendPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQRScan = () => {
+    // Open QR code page for user to share their payment QR
+    window.location.href = '/qr';
   };
 
   const formatCurrency = (amount: number) => {
@@ -208,13 +216,31 @@ export default function SendPage() {
             maxLength={200}
           />
 
-          <Button
-            onClick={handlePreview}
-            className="w-full"
-            disabled={!selectedAccountId || !recipient || !amount}
-          >
-            Continue
-          </Button>
+          <Input
+            label="Tag/Category (Optional)"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            placeholder="e.g., Groceries, Rent, Dinner"
+            maxLength={50}
+          />
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handlePreview}
+              className="flex-1"
+              disabled={!selectedAccountId || !recipient || !amount}
+            >
+              Continue
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleQRScan}
+              className="px-4"
+              title="Show payment QR code"
+            >
+              <QrCode className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </Card>
 

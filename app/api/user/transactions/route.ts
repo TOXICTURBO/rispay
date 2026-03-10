@@ -7,6 +7,7 @@ export const GET = withAuth(async (req: NextRequest, user) => {
   const searchParams = req.nextUrl.searchParams;
   const limit = parseInt(searchParams.get('limit') || '50');
   const offset = parseInt(searchParams.get('offset') || '0');
+  const tag = searchParams.get('tag');
 
   // Get user's account IDs
   const accounts = await prisma.account.findMany({
@@ -16,13 +17,20 @@ export const GET = withAuth(async (req: NextRequest, user) => {
 
   const accountIds = accounts.map((a) => a.id);
 
+  const where: any = {
+    OR: [
+      { sender_account_id: { in: accountIds } },
+      { receiver_account_id: { in: accountIds } },
+    ],
+  };
+
+  // Add tag filter if provided
+  if (tag) {
+    where.tag = tag;
+  }
+
   const transactions = await prisma.transaction.findMany({
-    where: {
-      OR: [
-        { sender_account_id: { in: accountIds } },
-        { receiver_account_id: { in: accountIds } },
-      ],
-    },
+    where,
     include: {
       sender_account: {
         include: {

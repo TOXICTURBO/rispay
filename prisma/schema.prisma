@@ -173,6 +173,7 @@ model Transaction {
   bank_fee           Decimal           @db.Decimal(15, 2)
   system_tax         Decimal           @db.Decimal(15, 2)
   memo               String?
+  tag                String?
   status             TransactionStatus @default(COMPLETED)
   created_at         DateTime          @default(now())
 

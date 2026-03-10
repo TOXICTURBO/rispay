@@ -16,6 +16,7 @@ export const sendMoneySchema = z.object({
   amount: z.number().positive().max(1000000),
   senderAccountId: z.string(),
   memo: z.string().max(200).optional(),
+  tag: z.string().max(50).optional(),
   pin: z.string().length(4).regex(/^\d+$/, 'PIN must be exactly 4 digits'),
 });
 

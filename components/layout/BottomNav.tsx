@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, CreditCard, Send, BarChart3, Settings } from 'lucide-react';
+import { Home, CreditCard, Send, BarChart3, QrCode, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/accounts', icon: CreditCard, label: 'Accounts' },
   { href: '/send', icon: Send, label: 'Send' },
   { href: '/insights', icon: BarChart3, label: 'Insights' },
+  { href: '/qr', icon: QrCode, label: 'QR' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 

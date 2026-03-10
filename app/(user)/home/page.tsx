@@ -25,21 +25,43 @@ export default function HomePage() {
   const [totalBalance, setTotalBalance] = useState(0);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (selectedTag) {
+      fetchTransactionsByTag(selectedTag);
+    }
+  }, [selectedTag]);
+
+  const fetchTransactionsByTag = async (tag: string) => {
+    try {
+      const res = await fetch(`/api/user/transactions?limit=5&tag=${encodeURIComponent(tag)}`);
+      const data = await res.json();
+      if (data.transactions) {
+        setRecentTransactions(data.transactions);
+      }
+    } catch (error) {
+      console.error('Error fetching filtered transactions:', error);
+    }
+  };
+
   const fetchData = async () => {
     try {
-      const [accountsRes, transactionsRes] = await Promise.all([
+      const [accountsRes, transactionsRes, tagsRes] = await Promise.all([
         fetch('/api/user/accounts'),
         fetch('/api/user/transactions?limit=5'),
+        fetch('/api/user/transactions/tags'),
       ]);
 
       const accountsData = await accountsRes.json();
       const transactionsData = await transactionsRes.json();
+      const tagsData = await tagsRes.json();
 
       if (accountsData.accounts) {
         setAccounts(accountsData.accounts);
@@ -52,6 +74,10 @@ export default function HomePage() {
 
       if (transactionsData.transactions) {
         setRecentTransactions(transactionsData.transactions);
+      }
+
+      if (tagsData.tags) {
+        setTags(tagsData.tags);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -156,9 +182,25 @@ export default function HomePage() {
 
       {/* Recent Transactions */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-          Recent Transactions
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Recent Transactions
+          </h3>
+          {tags.length > 0 && (
+            <select
+              value={selectedTag || ''}
+              onChange={(e) => setSelectedTag(e.target.value || null)}
+              className="px-3 py-1 text-sm rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            >
+              <option value="">All Tags</option>
+              {tags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
         {recentTransactions.length === 0 ? (
           <Card>
             <p className="text-center text-slate-500 dark:text-slate-400 py-8">
@@ -194,11 +236,18 @@ export default function HomePage() {
                           <p className="font-medium text-slate-900 dark:text-slate-100">
                             {otherUser?.username || 'Unknown'}
                           </p>
-                          {tx.memo && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {tx.memo}
-                            </p>
-                          )}
+                          <div className="flex gap-2 items-center">
+                            {tx.memo && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {tx.memo}
+                              </p>
+                            )}
+                            {tx.tag && (
+                              <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200">
+                                {tx.tag}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
