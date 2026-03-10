@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode.react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -16,13 +16,7 @@ export default function QRPaymentPage() {
   const [loading, setLoading] = useState(true);
   const qrRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (user?.username) {
-      generateQR();
-    }
-  }, [user?.username]);
-
-  const generateQR = async () => {
+  const generateQR = useCallback(async () => {
     try {
       const res = await fetch('/api/qr/generate', {
         method: 'POST',
@@ -40,7 +34,13 @@ export default function QRPaymentPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.username, showToast]);
+
+  useEffect(() => {
+    if (user?.username) {
+      generateQR();
+    }
+  }, [user?.username, generateQR]);
 
   const handleDownload = () => {
     if (qrRef.current) {
