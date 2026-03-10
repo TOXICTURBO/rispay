@@ -39,6 +39,7 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
   if (data.inflationRate !== undefined) updateData.inflation_rate = data.inflationRate;
   if (data.taxEnabled !== undefined) updateData.tax_enabled = data.taxEnabled;
   if (data.inflationEnabled !== undefined) updateData.inflation_enabled = data.inflationEnabled;
+  if (data.vaultTransferFee !== undefined) updateData.vault_transfer_fee = data.vaultTransferFee;
 
   const settings = await prisma.systemSettings.upsert({
     where: { id: 'default' },
@@ -50,8 +51,8 @@ export const PUT = withAuth(async (req: NextRequest, user) => {
       inflation_rate: data.inflationRate ?? 0.0,
       tax_enabled: data.taxEnabled ?? true,
       inflation_enabled: data.inflationEnabled ?? false,
+      vault_transfer_fee: data.vaultTransferFee ?? 0.5,
       admin_wallet_balance: 0,
-      vault_transfer_fee: 0.5,
     },
   });
 

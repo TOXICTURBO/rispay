@@ -43,6 +43,7 @@ export const systemSettingsSchema = z.object({
   inflationRate: z.number().min(0).max(100).optional(),
   taxEnabled: z.boolean().optional(),
   inflationEnabled: z.boolean().optional(),
+  vaultTransferFee: z.number().min(0).max(100).optional(),
 });
 
 export const creditDebitSchema = z.object({
